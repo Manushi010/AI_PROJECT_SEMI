@@ -381,57 +381,68 @@ with tab3:
 
 with tab4:
     st.subheader("Make a Prediction")
-    st.sidebar.header("Input Environmental Values")
 
     def get_default(col, fallback):
         if col in df.columns:
             return float(df[col].median())
         return fallback
 
-    temp = st.sidebar.number_input(
-        "Temperature (TEMP)", value=get_default("TEMP", 20.0))
-    pres = st.sidebar.number_input(
-        "Pressure (PRES)", value=get_default("PRES", 1010.0))
-    dewp = st.sidebar.number_input(
-        "Dew Point (DEWP)", value=get_default("DEWP", 10.0))
-    iws = st.sidebar.number_input(
-        "Wind Speed (Iws)", value=get_default("Iws", 1.0))
-    is_val = st.sidebar.number_input(
-        "Cumulated Hours of Snow (Is)", value=get_default("Is", 0.0))
-    ir_val = st.sidebar.number_input(
-        "Cumulated Hours of Rain (Ir)", value=get_default("Ir", 0.0))
+    st.markdown("### Input Environmental Values")
 
-    year = int(st.sidebar.number_input(
-        "Year",
-        value=int(df["year"].mode()[0]) if "year" in df.columns else 2014,
-        step=1
-    ))
-    month = int(st.sidebar.number_input(
-        "Month",
-        min_value=1,
-        max_value=12,
-        value=int(df["month"].mode()[0]) if "month" in df.columns else 1,
-        step=1
-    ))
-    day = int(st.sidebar.number_input(
-        "Day",
-        min_value=1,
-        max_value=31,
-        value=int(df["day"].mode()[0]) if "day" in df.columns else 1,
-        step=1
-    ))
-    hour = int(st.sidebar.number_input(
-        "Hour",
-        min_value=0,
-        max_value=23,
-        value=int(df["hour"].mode()[0]) if "hour" in df.columns else 12,
-        step=1
-    ))
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        dewp = st.number_input(
+            "Dew Point (DEWP)", value=get_default("DEWP", 10.0))
+        temp = st.number_input("Temperature (TEMP)",
+                               value=get_default("TEMP", 20.0))
+        pres = st.number_input(
+            "Pressure (PRES)", value=get_default("PRES", 1010.0))
+
+    with col2:
+        iws = st.number_input("Wind Speed (Iws)",
+                              value=get_default("Iws", 1.0))
+        is_val = st.number_input(
+            "Cumulated Hours of Snow (Is)", value=get_default("Is", 0.0))
+        ir_val = st.number_input(
+            "Cumulated Hours of Rain (Ir)", value=get_default("Ir", 0.0))
+
+    with col3:
+        year = int(st.number_input(
+            "Year",
+            value=int(df["year"].mode()[0]) if "year" in df.columns else 2014,
+            step=1
+        ))
+
+        month = int(st.number_input(
+            "Month",
+            min_value=1,
+            max_value=12,
+            value=int(df["month"].mode()[0]) if "month" in df.columns else 1,
+            step=1
+        ))
+
+        day = int(st.number_input(
+            "Day",
+            min_value=1,
+            max_value=31,
+            value=int(df["day"].mode()[0]) if "day" in df.columns else 1,
+            step=1
+        ))
+
+        hour = int(st.number_input(
+            "Hour",
+            min_value=0,
+            max_value=23,
+            value=int(df["hour"].mode()[0]) if "hour" in df.columns else 12,
+            step=1
+        ))
 
     cbwd_options = sorted(df["cbwd"].dropna().astype(
         str).unique().tolist()) if "cbwd" in df.columns else ["cv"]
-    cbwd = st.sidebar.selectbox("Wind Direction (cbwd)", options=cbwd_options)
+    cbwd = st.selectbox("Wind Direction (cbwd)", options=cbwd_options)
 
+    # Derived features
     season_num = month % 12 // 3 + 1
     season_name = {1: "Winter", 2: "Spring",
                    3: "Summer", 4: "Autumn"}[season_num]
@@ -462,21 +473,25 @@ with tab4:
     }
 
     input_df = pd.DataFrame([input_row])
-    input_df = input_df[[
-        col for col in models["selected_features"] if col in input_df.columns]]
+
+    # IMPORTANT FIX (prevents missing columns issue)
+    input_df = input_df.reindex(
+        columns=models["selected_features"], fill_value=0)
 
     st.markdown("### Current Input Summary")
     st.dataframe(input_df, use_container_width=True)
 
     if st.button("Predict Air Quality"):
         pm_pred = float(models["reg_model"].predict(input_df)[0])
-        risk_pred = models["clf_model"].predict(input_df)[0]
+        risk_pred = pollution_risk(pm_pred)   # safer than classifier
 
         st.markdown("### 🔍 Prediction Result")
 
         col_a, col_b = st.columns(2)
+
         with col_a:
             st.metric("Predicted PM2.5", f"{pm_pred:.2f}")
+
         with col_b:
             st.metric("Predicted Risk", str(risk_pred))
 
