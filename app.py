@@ -501,36 +501,3 @@ with tab4:
             """,
             unsafe_allow_html=True
         )
-
-with tab5:
-    st.subheader("🌍 Real-World Impact")
-
-    st.markdown("""
-### 🌍 Why This Matters
-
-Air pollution is a major global health risk. This system helps:
-- detect dangerous pollution levels early
-- support environmental monitoring
-- improve public awareness
-""")
-
-    st.markdown("""
-- Helps monitor air pollution trends  
-- Supports public health risk awareness  
-- Can be extended into real-time smart city systems  
-- Useful for environmental monitoring and forecasting  
-""")
-
-    st.markdown("### Project Summary")
-    st.write("""
-    This dashboard combines machine learning, environmental analysis, and visualization
-    to forecast PM2.5 and classify pollution risk. It demonstrates how data science
-    can support environmental decision-making in a practical and interactive way.
-    """)
-
-    st.markdown("### Future Improvements")
-    st.write("""
-    - Add advanced models like XGBoost or LSTM  
-    - Connect live API-based weather data  
-    - Add more pollutants and health-based alerts  
-    """)
