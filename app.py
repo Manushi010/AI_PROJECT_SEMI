@@ -266,7 +266,7 @@ models = train_models(df)
 if "risk" not in df.columns:
     df["risk"] = df["pm2.5"].apply(pollution_risk)
 
-tab1, tab2, tab3, tab4,  = st.tabs(
+tab1, tab2, tab3, tab4 = st.tabs(
     ["Overview", "EDA", "Model Results", "Predict"]
 )
 
