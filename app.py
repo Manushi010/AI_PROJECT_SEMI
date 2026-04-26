@@ -320,22 +320,6 @@ with tab2:
         ax.set_xlabel("PM2.5")
         st.pyplot(fig)
 
-    numeric_df = df.select_dtypes(include=np.number)
-
-    if not numeric_df.empty:
-        st.subheader("Correlation Heatmap")
-        corr = numeric_df.corr()
-
-        fig, ax = plt.subplots(figsize=(10, 6))
-        im = ax.imshow(corr, aspect="auto")
-        ax.set_xticks(range(len(corr.columns)))
-        ax.set_yticks(range(len(corr.columns)))
-        ax.set_xticklabels(corr.columns, rotation=90)
-        ax.set_yticklabels(corr.columns)
-        ax.set_title("Correlation Heatmap")
-        fig.colorbar(im)
-        st.pyplot(fig)
-
     scatter_features = [col for col in [
         "TEMP", "PRES", "DEWP", "Iws"] if col in df.columns]
     if scatter_features:
