@@ -1,17 +1,17 @@
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, accuracy_score, f1_score
+from sklearn.impute import SimpleImputer
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.compose import ColumnTransformer
+import matplotlib.pyplot as plt
+import streamlit as st
+import pandas as pd
+import numpy as np
 import warnings
 warnings.filterwarnings("ignore")
 
-import numpy as np
-import pandas as pd
-import streamlit as st
-import matplotlib.pyplot as plt
-from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.impute import SimpleImputer
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, accuracy_score, f1_score
-from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 st.set_page_config(
     page_title="Air Quality Forecasting Dashboard",
@@ -21,6 +21,10 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
     .main {
         background-color: #0e1117;
     }
@@ -52,24 +56,29 @@ st.markdown("""
         margin-bottom: 0px;
     }
 
-    .section-card {
-        background-color: #111827;
-        padding: 18px;
-        border-radius: 16px;
-        border: 1px solid #253046;
-        margin-bottom: 15px;
-    }
-
     .small-note {
         color: #cbd5e1;
         font-size: 15px;
     }
 
     div[data-testid="stMetric"] {
-        background-color: #111827;
-        border: 1px solid #253046;
-        padding: 14px;
-        border-radius: 14px;
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    div[data-testid="stMetricLabel"] {
+        color: #94a3b8 !important;
+        font-size: 14px !important;
+        font-weight: 500;
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: #ffffff !important;
+        font-size: 32px !important;
+        font-weight: 700 !important;
+        text-shadow: 0px 0px 8px rgba(255,255,255,0.15);
     }
 
     .result-box {
@@ -80,26 +89,27 @@ st.markdown("""
         border: 1px solid #253046;
         background-color: #111827;
     }
-
-    .footer-box {
-        background-color: #111827;
-        padding: 22px;
-        border-radius: 16px;
-        border: 1px solid #253046;
-        margin-top: 20px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-
 st.markdown("""
 <div class="hero-box">
-    <div class="hero-title">🌫️ Air Quality Intelligence System</div>
+    <div class="hero-title">🌫️ Intelligent Air Quality Forecasting System</div>
     <div class="hero-subtitle">
         Predict PM2.5 concentration and analyze pollution risk using machine learning
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+st.markdown("**Developed by: Manushi Paudel**")
+
+st.markdown("""
+### 📘 Project Overview
+
+This system predicts PM2.5 air pollution levels and classifies pollution risk
+based on environmental conditions such as temperature, pressure, dew point,
+wind speed, rain, and snow.
+""")
 
 
 @st.cache_data
@@ -110,7 +120,8 @@ def load_data(file):
         df = df.drop(columns=["No"])
 
     if all(col in df.columns for col in ["year", "month", "day", "hour"]):
-        df["date"] = pd.to_datetime(df[["year", "month", "day", "hour"]], errors="coerce")
+        df["date"] = pd.to_datetime(
+            df[["year", "month", "day", "hour"]], errors="coerce")
 
     df = df[df["pm2.5"].notna()].copy()
 
@@ -225,7 +236,8 @@ def train_models(df):
     feature_importance_df = None
     try:
         model = reg_model.named_steps["model"]
-        transformed_names = reg_model.named_steps["preprocessor"].get_feature_names_out()
+        transformed_names = reg_model.named_steps["preprocessor"].get_feature_names_out(
+        )
         importances = model.feature_importances_
 
         feature_importance_df = pd.DataFrame({
@@ -247,13 +259,8 @@ def train_models(df):
     }
 
 
-uploaded = st.file_uploader("Upload your Beijing PM2.5 CSV file", type=["csv"])
-
-if uploaded is None:
-    st.info("Upload the dataset to start the dashboard.")
-    st.stop()
-
-df = load_data(uploaded)
+DATA_PATH = "PRSA_data_2010.1.1-2014.12.31.csv"
+df = load_data(DATA_PATH)
 models = train_models(df)
 
 if "risk" not in df.columns:
@@ -289,7 +296,8 @@ with tab1:
     st.markdown("### 📌 Key Insights")
     st.write(f"- Average PM2.5 is **{df['pm2.5'].mean():.2f}**.")
     st.write("- Pollution varies significantly with atmospheric conditions.")
-    st.write("- Wind speed, dew point, and pressure may influence air quality patterns.")
+    st.write(
+        "- Wind speed, dew point, and pressure may influence air quality patterns.")
     st.write("- Pollution risk classification helps translate raw PM2.5 values into meaningful categories.")
 
 with tab2:
@@ -328,7 +336,8 @@ with tab2:
         fig.colorbar(im)
         st.pyplot(fig)
 
-    scatter_features = [col for col in ["TEMP", "PRES", "DEWP", "Iws"] if col in df.columns]
+    scatter_features = [col for col in [
+        "TEMP", "PRES", "DEWP", "Iws"] if col in df.columns]
     if scatter_features:
         st.subheader("Feature vs PM2.5 Analysis")
         sample_df = df.sample(min(3000, len(df)), random_state=42)
@@ -367,15 +376,23 @@ with tab3:
         for k, v in models["clf_metrics"].items():
             st.metric(k, f"{v:.3f}")
 
+    st.markdown("### 📊 Model Insight")
+    st.write("""
+    Random Forest performs better for this kind of problem because it can capture
+    more complex nonlinear relationships between environmental variables and pollution levels.
+    """)
+
     st.markdown("### Features Used")
     st.write("**Numerical:**", models["features_num"])
     st.write("**Categorical:**", models["features_cat"])
 
     if models["feature_importance_df"] is not None:
         st.markdown("### Feature Importance")
-        st.dataframe(models["feature_importance_df"].head(15), use_container_width=True)
+        st.dataframe(models["feature_importance_df"].head(
+            15), use_container_width=True)
 
-        chart_df = models["feature_importance_df"].head(10).set_index("Feature")
+        chart_df = models["feature_importance_df"].head(
+            10).set_index("Feature")
         st.bar_chart(chart_df)
 
 with tab4:
@@ -387,12 +404,18 @@ with tab4:
             return float(df[col].median())
         return fallback
 
-    temp = st.sidebar.number_input("Temperature (TEMP)", value=get_default("TEMP", 20.0))
-    pres = st.sidebar.number_input("Pressure (PRES)", value=get_default("PRES", 1010.0))
-    dewp = st.sidebar.number_input("Dew Point (DEWP)", value=get_default("DEWP", 10.0))
-    iws = st.sidebar.number_input("Wind Speed (Iws)", value=get_default("Iws", 1.0))
-    is_val = st.sidebar.number_input("Cumulated Hours of Snow (Is)", value=get_default("Is", 0.0))
-    ir_val = st.sidebar.number_input("Cumulated Hours of Rain (Ir)", value=get_default("Ir", 0.0))
+    temp = st.sidebar.number_input(
+        "Temperature (TEMP)", value=get_default("TEMP", 20.0))
+    pres = st.sidebar.number_input(
+        "Pressure (PRES)", value=get_default("PRES", 1010.0))
+    dewp = st.sidebar.number_input(
+        "Dew Point (DEWP)", value=get_default("DEWP", 10.0))
+    iws = st.sidebar.number_input(
+        "Wind Speed (Iws)", value=get_default("Iws", 1.0))
+    is_val = st.sidebar.number_input(
+        "Cumulated Hours of Snow (Is)", value=get_default("Is", 0.0))
+    ir_val = st.sidebar.number_input(
+        "Cumulated Hours of Rain (Ir)", value=get_default("Ir", 0.0))
 
     year = int(st.sidebar.number_input(
         "Year",
@@ -421,11 +444,13 @@ with tab4:
         step=1
     ))
 
-    cbwd_options = sorted(df["cbwd"].dropna().astype(str).unique().tolist()) if "cbwd" in df.columns else ["cv"]
+    cbwd_options = sorted(df["cbwd"].dropna().astype(
+        str).unique().tolist()) if "cbwd" in df.columns else ["cv"]
     cbwd = st.sidebar.selectbox("Wind Direction (cbwd)", options=cbwd_options)
 
     season_num = month % 12 // 3 + 1
-    season_name = {1: "Winter", 2: "Spring", 3: "Summer", 4: "Autumn"}[season_num]
+    season_name = {1: "Winter", 2: "Spring",
+                   3: "Summer", 4: "Autumn"}[season_num]
 
     if hour <= 5:
         time_of_day = "Night"
@@ -453,7 +478,8 @@ with tab4:
     }
 
     input_df = pd.DataFrame([input_row])
-    input_df = input_df[[col for col in models["selected_features"] if col in input_df.columns]]
+    input_df = input_df[[
+        col for col in models["selected_features"] if col in input_df.columns]]
 
     st.markdown("### Current Input Summary")
     st.dataframe(input_df, use_container_width=True)
@@ -496,11 +522,20 @@ with tab5:
     st.subheader("🌍 Real-World Impact")
 
     st.markdown("""
-    - Helps monitor air pollution trends  
-    - Supports public health risk awareness  
-    - Can be extended into real-time smart city systems  
-    - Useful for environmental monitoring and forecasting  
-    """)
+### 🌍 Why This Matters
+
+Air pollution is a major global health risk. This system helps:
+- detect dangerous pollution levels early
+- support environmental monitoring
+- improve public awareness
+""")
+
+    st.markdown("""
+- Helps monitor air pollution trends  
+- Supports public health risk awareness  
+- Can be extended into real-time smart city systems  
+- Useful for environmental monitoring and forecasting  
+""")
 
     st.markdown("### Project Summary")
     st.write("""
@@ -513,7 +548,5 @@ with tab5:
     st.write("""
     - Add advanced models like XGBoost or LSTM  
     - Connect live API-based weather data  
-    - Deploy online for public use  
     - Add more pollutants and health-based alerts  
     """)
-
