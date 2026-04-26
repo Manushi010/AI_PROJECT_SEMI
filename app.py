@@ -293,7 +293,7 @@ with tab1:
     ax.set_ylabel("Count")
     st.pyplot(fig)
 
-    st.markdown("### 📌 Key Insights")
+    st.markdown("###  Key Insights")
     st.write(f"- Average PM2.5 is **{df['pm2.5'].mean():.2f}**.")
     st.write("- Pollution varies significantly with atmospheric conditions.")
     st.write(
